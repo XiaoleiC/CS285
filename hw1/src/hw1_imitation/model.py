@@ -7,6 +7,7 @@ from typing import Literal, TypeAlias
 
 import torch
 from torch import nn
+import torch.nn.functional as F
 
 
 class BasePolicy(nn.Module, metaclass=abc.ABCMeta):
@@ -46,13 +47,29 @@ class MSEPolicy(BasePolicy):
         hidden_dims: tuple[int, ...] = (128, 128),
     ) -> None:
         super().__init__(state_dim, action_dim, chunk_size)
+        self.layers = nn.ModuleList()
+        input_dim = state_dim
+        for hidden_dim in hidden_dims:
+            self.layers.append(nn.Linear(input_dim, hidden_dim))
+            input_dim = hidden_dim
+        self.output_layer = nn.Linear(input_dim, chunk_size * action_dim)
+        self.activation = nn.ReLU()
+
+    def forward(self, state: torch.Tensor) -> torch.Tensor:
+        x = state
+        for layer in self.layers:
+            x = self.activation(layer(x))
+        x = self.output_layer(x)
+        return x.view(-1, self.chunk_size, self.action_dim)
 
     def compute_loss(
         self,
         state: torch.Tensor,
         action_chunk: torch.Tensor,
     ) -> torch.Tensor:
-        raise NotImplementedError
+        pred_action_chunk = self.forward(state)
+        loss = F.mse_loss(pred_action_chunk, action_chunk)
+        return loss
 
     def sample_actions(
         self,
@@ -60,7 +77,9 @@ class MSEPolicy(BasePolicy):
         *,
         num_steps: int = 10,
     ) -> torch.Tensor:
-        raise NotImplementedError
+        with torch.no_grad():
+            action_chunk = self.forward(state)
+        return action_chunk
 
 
 class FlowMatchingPolicy(BasePolicy):
