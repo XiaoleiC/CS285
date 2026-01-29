@@ -132,19 +132,23 @@ def run_training(config: TrainConfig) -> None:
         model.parameters(), lr=config.lr, weight_decay=config.weight_decay
     )
 
+    # Use torch.compile to speed up training
+    compiled_model = torch.compile(model)
+
     global_step = 0
     for epoch in range(config.num_epochs):
+        model.train()
         for batch_idx, (state_batch, action_batch) in enumerate(loader):
             state_batch = state_batch.to(device)
             action_batch = action_batch.to(device)
 
             optimizer.zero_grad()
-            loss = model.compute_loss(state_batch, action_batch)
+            loss = compiled_model.compute_loss(state_batch, action_batch)
             loss.backward()
             optimizer.step()
 
             if global_step % config.log_interval == 0:
-                logger.log({"train/loss": loss.item()}, step=global_step)
+                wandb.log({"train/loss": loss.item()}, step=global_step)
 
             if global_step > 0 and global_step % config.eval_interval == 0:
                 evaluate_policy(
@@ -160,6 +164,19 @@ def run_training(config: TrainConfig) -> None:
                 )
 
             global_step += 1
+
+    # Final evaluation at the end of training
+    evaluate_policy(
+        model=model,
+        normalizer=normalizer,
+        device=device,
+        chunk_size=config.chunk_size,
+        video_size=config.video_size,
+        num_video_episodes=config.num_video_episodes,
+        flow_num_steps=config.flow_num_steps,
+        step=global_step,
+        logger=logger,
+    )
 
     logger.dump_for_grading()
 
