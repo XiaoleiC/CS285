@@ -1,0 +1,64 @@
+% to change the appearance of the header, questions, problems or subproblems, see the homework.cls file or
+% override the \Problem, \Subproblem, \question or \printtitle commands.
+
+% The hidequestions option hides the questions. Remove it to print the questions in the text.
+\documentclass[]{homework}
+\usepackage{mathrsfs}
+\usepackage{graphicx}
+\usepackage{amsmath, amsthm}
+\usepackage{float}
+\usepackage{enumitem}
+\usepackage{dsfont}
+\DeclareMathOperator*{\argmaxA}{arg\,max} % Jan Hlavacek
+\DeclareMathOperator*{\argminA}{arg\,min} % Jan Hlavacek
+
+\newcommand{\vect}[1]{\boldsymbol{#1}}
+
+\renewcommand{\qed}{\hfill\blacksquare}
+% Set up your name, the course name and the homework set number.
+\homeworksetup{
+    username={Xiaolei Chu},
+    course={CS285},
+    setnumber=1}
+\begin{document}% this also prints the header.
+
+% use starred problems or subproblems to apply manual numbering.
+\problem*{1}
+\question{
+Suppose $X \mid p \sim \operatorname{Binomial}(n, p)$ and $p \sim \operatorname{Beta}(\alpha, \beta)$. Suppose also that the loss function $L(p, \hat{p}(X))=(p-\hat{p}(X))^2$.
+\begin{enumerate}[label=(\alph*)]
+    \item Calculate the posterior risk $r(\hat{p} \mid X)$ for an arbitrary estimator $\hat{p}$.
+    \item For a given $x$, what value of $\hat{p}(x)$ minimizes the posterior risk? Use this to construct a Bayes estimator.
+    For this question do not rely on the general fact that the posterior mean minimizes squared error loss, but find the minimizer directly from minimizing the posterior risk from part a.
+    \item Show that the posterior risk for the Bayes estimator you found in (b) is the posterior variance. Show that this going to be true generally for Bayes rules under squared error loss.
+\end{enumerate}
+
+}
+\subproblem[1]
+
+The posterior risk $r\left(\hat{p}\mid X\right)$ is
+\begin{equation*}
+    \begin{aligned}
+        r\left(\hat{p}\mid X\right) & = \mathbb{E}\left(L\left(p,\hat{p}\right)\mid X\right) \\
+        & = \int_{0}^{1} \left(p - \hat{p}\left(X\right)\right)^{2} f\left(p\mid X\right)\mathrm{d}p
+    \end{aligned}
+\end{equation*}
+where $f\left(p\mid X\right)$ is the density of the $\operatorname{Beta}\left(\alpha+X,\beta + n - X\right)$.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+\end{document}
