@@ -1,0 +1,156 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{amsmath}
+\usepackage{booktabs}
+\usepackage{graphicx}
+\usepackage{float}
+\usepackage{pgfplots}
+\usepackage{caption}
+\pgfplotsset{compat=1.18}
+
+\title{CS285 Assignment 1 Report\\Imitation Learning for Push-T}
+\author{XiaoLei Chu \\ SID: 3038525739}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section{Overview}
+This report summarizes my Homework 1 experiments for CS285 (Push-T imitation learning) using:
+\begin{itemize}
+    \item an MSE policy for action chunk prediction;
+    \item a flow matching policy with Euler integration at inference time.
+\end{itemize}
+Both runs used the provided training and evaluation pipeline, and both include full WandB logs/videos/checkpoints in the submission package.
+
+\section{Experimental Setup}
+\textbf{Shared training configuration (both runs):}
+\begin{itemize}
+    \item seed: 42
+    \item chunk size: 8
+    \item batch size: 128
+    \item optimizer: Adam, learning rate \(3\times 10^{-4}\), weight decay 0
+    \item hidden dimensions: \((256, 256, 256, 256)\)
+    \item epochs: 400
+    \item eval interval: every 10,000 training steps
+    \item flow denoising (Euler) steps: 10
+\end{itemize}
+
+\textbf{Curve data source:}
+The train loss curves are generated from the exported WandB CSV file
+\texttt{wandb\_export\_2026-02-11T18\_37\_24.546-08\_00.csv}. The eval reward curves are taken from each run's \texttt{log.csv}.
+
+\textbf{MLP architecture used for MSE policy:}
+\begin{itemize}
+    \item input: normalized state (\(5\)-D);
+    \item 4 fully connected hidden layers, each with 256 units;
+    \item activation: ReLU after each hidden layer;
+    \item output: flattened action chunk of size \(8 \times 2 = 16\), reshaped to \((8, 2)\).
+\end{itemize}
+
+\section{MSE Policy Results}
+\subsection{Training Curves}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=0.32\textwidth,
+    xlabel={Training Step},
+    ylabel={Train Loss},
+    grid=both,
+    title={MSE: Loss vs Step},
+]
+\addplot[color=blue, line width=1pt] table[x=step, y=loss, col sep=comma] {data/mse_loss.csv};
+\end{axis}
+\end{tikzpicture}
+\hfill
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=0.32\textwidth,
+    xlabel={Training Step},
+    ylabel={Eval Mean Reward},
+    ymin=0,
+    ymax=1,
+    grid=both,
+    title={MSE: Reward vs Step},
+]
+\addplot[color=red, mark=*, line width=1pt] table[x=step, y=reward, col sep=comma] {data/mse_reward.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{Training curves for the best MSE run.}
+\end{figure}
+
+\textbf{Key metrics (MSE):}
+\begin{itemize}
+    \item best eval mean reward: 0.6953 at step 70,000;
+    \item final eval mean reward: 0.6537 at step 75,600.
+\end{itemize}
+This meets the homework success threshold (\(\ge 0.5\)).
+
+\section{Flow Matching Policy Results}
+\subsection{Training Curves}
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=0.32\textwidth,
+    xlabel={Training Step},
+    ylabel={Train Loss},
+    grid=both,
+    title={Flow: Loss vs Step},
+]
+\addplot[color=blue, line width=1pt] table[x=step, y=loss, col sep=comma] {data/flow_loss.csv};
+\end{axis}
+\end{tikzpicture}
+\hfill
+\begin{tikzpicture}
+\begin{axis}[
+    width=0.48\textwidth,
+    height=0.32\textwidth,
+    xlabel={Training Step},
+    ylabel={Eval Mean Reward},
+    ymin=0,
+    ymax=1,
+    grid=both,
+    title={Flow: Reward vs Step},
+]
+\addplot[color=red, mark=*, line width=1pt] table[x=step, y=reward, col sep=comma] {data/flow_reward.csv};
+\end{axis}
+\end{tikzpicture}
+\caption{Training curves for the best flow matching run.}
+\end{figure}
+
+\textbf{Key metrics (Flow):}
+\begin{itemize}
+    \item best eval mean reward: 0.8865 at step 75,600;
+    \item final eval mean reward: 0.8865 at step 75,600.
+\end{itemize}
+This exceeds the homework success threshold (\(\ge 0.7\)).
+
+\section{Qualitative Comparison (from Evaluation Videos)}
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/mse_video_strip.png}
+\caption{MSE rollout (episode 3): early, middle, and late frames.}
+\end{figure}
+
+\begin{figure}[H]
+\centering
+\includegraphics[width=0.95\textwidth]{figures/flow_video_strip.png}
+\caption{Flow rollout (episode 3): early, middle, and late frames.}
+\end{figure}
+
+\textbf{Behavioral observations:}
+\begin{itemize}
+    \item The MSE policy generally solves many cases but is less consistent at the end of trajectory execution.
+    \item The flow policy produces smoother and more reliable progress toward goal completion across the trajectory.
+    \item Consistent with these observations, flow achieves substantially higher final and peak rewards than MSE.
+\end{itemize}
+
+\section{Conclusion}
+Both policies were implemented and trained successfully. The MSE policy reaches solid performance above the required threshold, while flow matching provides a clear improvement in both quantitative reward and qualitative rollout reliability.
+
+\end{document}

@@ -1,19 +1,44 @@
+# Python cache/build
 __pycache__/
 *.pyc
-.git/
-.venv/
+*.pyo
+*.pyd
 *.egg-info/
-wandb/
+.pytest_cache/
+.mypy_cache/
+
+# Virtual envs
+.venv/
+venv/
+env/
+
+# IDE / OS files
 .vscode/
 .idea/
 .DS_Store
+Thumbs.db
 
-# Data artifacts
-/data/
+# Experiment and dataset artifacts
+data/
+exp/
+wandb/
 checkpoints/
 videos/
-*.zip
-exp/
-
-# Modal logs/artifacts
 modal_volume/
+
+# Submission artifacts
+submit/
+submit.zip
+*.zip
+
+# Local exports / temp files
+wandb_export_*.csv
+
+# LaTeX build artifacts (keep report source/pdf)
+report/*.aux
+report/*.log
+report/*.out
+report/*.toc
+report/*.fls
+report/*.fdb_latexmk
+report/*.synctex.gz
