@@ -142,6 +142,5 @@ def convert_listofrollouts(trajs):
         unconcatenated_rewards,
     )
 
-
 def get_traj_length(traj):
     return len(traj["reward"])

@@ -81,7 +81,14 @@ class PGAgent(nn.Module):
         # step 4: if needed, use all datapoints (s_t, a_t, q_t) to update the PG critic/baseline
         if self.critic is not None:
             # TODO: perform `self.baseline_gradient_steps` updates to the critic/baseline network
-            critic_info = self.critic.update(obs, q_values, self.baseline_gradient_steps)
+            num_critic_updates = (
+                self.baseline_gradient_steps
+                if self.baseline_gradient_steps is not None
+                else 1
+            )
+            critic_info = {}
+            for _ in range(num_critic_updates):
+                critic_info = self.critic.update(obs, q_values)
 
             info.update(critic_info)
 
