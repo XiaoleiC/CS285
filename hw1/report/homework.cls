@@ -134,11 +134,13 @@
 \newcommand\@username{username}
 \newcommand\@course{course}
 \newcommand\@setnumber{0}
+\newcommand\@settitle{}
 
 % override defaults if provided
 \define@key{Homework}{username}{\renewcommand\@username{#1}}
 \define@key{Homework}{course}{\renewcommand\@course{#1}}
 \define@key{Homework}{setnumber}{\renewcommand\@setnumber{#1}}
+\define@key{Homework}{settitle}{\renewcommand\@settitle{#1}}
 
 \newcommand\homeworksetup{\kvsetkeys{Homework}}
 
@@ -152,7 +154,8 @@
 % format for header
 \newcommand{\@printtitle}{
   \begin{center}
-  {\Large\bf\@course: Homework \@setnumber} \par\vspace{.5em}
+  {\Large\bf\@course: Assignment \@setnumber} \par\vspace{.3em}
+  {\large\@settitle} \par\vspace{.5em}
   {\@username}
   \end{center}
 }

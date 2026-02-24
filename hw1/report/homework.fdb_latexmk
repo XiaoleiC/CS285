@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1770763493.31519 "/mnt/d/CS285/hw1/report/homework.tex" "homework.pdf" "homework" 1770763494.16868 0
+["pdflatex"] 1770834394.39798 "/mnt/d/CS285/hw1/report/homework.tex" "homework.pdf" "homework" 1770834395.27081 0
   "/etc/texmf/web2c/texmf.cnf" 1770758212.81023 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/mnt/d/CS285/hw1/report/homework.tex" 1770763493.06722 2222 5e615b7ba44a6cfe98de042b7d310c59 ""
+  "/mnt/d/CS285/hw1/report/homework.tex" 1770834393.93345 2257 ba930ca523f73f7613a63e1bdc4f722b ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/symbols/msam10.tfm" 1246382020 916 f87d7c45f9c908e672703b83b72241a3 ""
@@ -20,6 +20,7 @@
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmex10.pfb" 1248133631 30251 6afa5cb1d0204815a708a080681d4674 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmmi10.pfb" 1248133631 36299 5f9df58c2139e7edcf37c8fca4bd384d ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr10.pfb" 1248133631 35752 024fb6c41858982481f6968b5fc26508 ""
+  "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr12.pfb" 1248133631 32722 d7379af29a190c3f453aba36302ff5a9 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmr7.pfb" 1248133631 32762 224316ccc9ad3ca0423a14971cfa7fc1 ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/cm/cmsy10.pfb" 1248133631 32569 5e5ddc8df908dea60932f3c484a54c0d ""
   "/usr/share/texlive/texmf-dist/fonts/type1/public/amsfonts/symbols/msbm10.pfb" 1248133631 34694 ad62b13721ee8eda1dcc8993c8bd7041 ""
@@ -61,9 +62,9 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1770763314.44028 5312232 f3296911be9cc021788f3f879cf0a47d ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1770763087 6800793 572e26daf87cac4c3db6651a643b2a39 ""
-  "homework.aux" 1770763494.0167 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
-  "homework.cls" 1770762854.96976 4850 5bcb2a588947c01cdf2ce3f2024d2da2 ""
-  "homework.tex" 1770763493.06722 2222 5e615b7ba44a6cfe98de042b7d310c59 ""
+  "homework.aux" 1770834395.1776 32 3985256e7290058c681f74d7a3565a19 "pdflatex"
+  "homework.cls" 1770834393.958 4976 711e8e5b60320e00a783bd7abe2ccf78 ""
+  "homework.tex" 1770834393.93345 2257 ba930ca523f73f7613a63e1bdc4f722b ""
   "mathOperators.sty" 1770762860.17019 1703 890a725119c6b4d48e3664640aebcd86 ""
   (generated)
   "homework.aux"
