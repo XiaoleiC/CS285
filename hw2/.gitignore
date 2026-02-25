@@ -6,6 +6,23 @@ dist/
 .DS_Store
 .idea/
 .venv/
+.claude/
 .ruff_cache/
 
 # exp/
+
+# LaTeX intermediate files
+*.aux
+*.log
+*.out
+*.toc
+*.lof
+*.lot
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.bbl
+*.blg
+*.nav
+*.snm
+*.vrb
