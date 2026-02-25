@@ -175,27 +175,55 @@ uv run src/scripts/run.py --env_name LunarLander-v2 --ep_len 1000 \
 \begin{figure}[h!]
 \centering
 \includegraphics[width=0.85\textwidth]{figures/pendulum_tuning.png}
-\caption{InvertedPendulum-v4: Learning curves for different hyperparameter configurations. The best configuration reaches a return of 1000 within $\sim$35K environment steps.}
+\caption{InvertedPendulum-v4: Hyperparameter tuning process. The figure shows the default configuration, three intermediate tuning attempts, and the final best configuration. The best run reaches a return of 1000 within $\sim$35K environment steps, while the default requires $\sim$380K steps.}
 \label{fig:pendulum}
 \end{figure}
 
+\subsection{Tuning Process}
+
+We conducted a series of hyperparameter tuning experiments starting from the default configuration. Figure~\ref{fig:pendulum} shows the learning curves of all runs. The tuning process proceeded as follows:
+
+\begin{enumerate}
+    \item \textbf{Attempt 1} ($lr=0.001$, $b=4000$, $blr=0.001$): Enabled all variance reduction techniques (RTG, baseline, GAE-$\lambda=0.98$, NA) with a larger network ($s=128$), but used a conservative policy learning rate and a low baseline learning rate. The poor baseline fit (due to $blr=0.001$) limited performance to a max return of only $\sim$592.
+    \item \textbf{Attempt 2} ($lr=0.001$, $b=1000$, $gae\_\lambda=0.99$, $bgs=10$): Reduced batch size for more frequent updates and increased baseline gradient steps to 10. However, the policy learning rate was still too low, resulting in the worst performance (max $\sim$273).
+    \item \textbf{Attempt 3} ($lr=0.001$, $b=4000$, $blr=0.005$): Fixed the baseline learning rate to $0.005$, which significantly improved baseline quality. This run reached 1000 but required $\sim$347K steps---still limited by the low policy learning rate.
+    \item \textbf{Best} ($lr=0.02$, $b=1000$): The key insight from previous attempts was that the policy learning rate was the bottleneck. Increasing it to $0.02$ combined with a small batch size ($b=1000$) for frequent updates led to reaching 1000 within $\sim$35K steps---a $\sim$10$\times$ improvement over the default.
+\end{enumerate}
+
 \subsection{Best Hyperparameters}
 
-The best configuration reaches the maximum return of 1000 within $\sim$35,000 environment steps (well under the 100K budget). The key hyperparameters are:
+The best configuration differs from the default in the following ways:
 
 \begin{itemize}
-    \item \textbf{Learning rate ($lr = 0.02$):} A higher policy learning rate was the most important factor, allowing faster convergence.
-    \item \textbf{Batch size ($b = 1000$):} A smaller batch size (compared to the default 5000) means each policy gradient iteration uses fewer environment steps, enabling more frequent policy updates within the step budget.
-    \item \textbf{Reward-to-go, baseline, GAE ($\lambda=0.98$), and advantage normalization:} All variance reduction techniques were enabled, providing stable and efficient gradient estimates.
-    \item \textbf{Discount ($\gamma = 0.99$):} A high discount factor is important for this continuing task.
-    \item \textbf{Network size (layer\_size=128):} A larger network than the default 64 was used.
+    \item \textbf{Learning rate ($lr = 0.02$ vs.\ default $0.005$):} The most impactful change. A higher policy learning rate dramatically sped up convergence.
+    \item \textbf{Batch size ($b = 1000$ vs.\ default $5000$):} A smaller batch size enables more frequent policy updates within the same step budget.
+    \item \textbf{Reward-to-go, baseline, GAE ($\lambda=0.98$), and advantage normalization:} All variance reduction techniques were enabled (all disabled by default), providing stable gradient estimates even with the smaller batch and larger learning rate.
+    \item \textbf{Discount ($\gamma = 0.99$ vs.\ default $1.0$):} Discounting helps reduce variance in the return estimates.
+    \item \textbf{Network size (layer\_size$=128$ vs.\ default $64$):} A larger network provides more expressive capacity.
 \end{itemize}
 
-The most impactful hyperparameters were the \textbf{learning rate} and \textbf{batch size}. Increasing the learning rate from 0.001 to 0.02 dramatically sped up convergence, and using a smaller batch size allowed more policy updates per environment step.
-
-\subsection{Command Line Configuration}
+\subsection{Command Line Configurations}
 
 \begin{lstlisting}
+# Default configuration (reaches 1000 at ~380K steps)
+uv run src/scripts/run.py --env_name InvertedPendulum-v4 -n 100 -b 5000 \
+  -eb 1000 --exp_name pendulum
+
+# Attempt 1 (max ~592, lr too low, blr too low)
+uv run src/scripts/run.py --env_name InvertedPendulum-v4 -n 100 -b 4000 \
+  -eb 1000 -rtg --use_baseline -blr 0.001 -bgs 5 --gae_lambda 0.98 \
+  -na --discount 0.99 -lr 0.001 -s 128 --exp_name pendulum
+
+# Attempt 2 (max ~273, lr too low)
+uv run src/scripts/run.py --env_name InvertedPendulum-v4 -n 100 -b 1000 \
+  -eb 400 -rtg --use_baseline -blr 0.001 -bgs 10 --gae_lambda 0.99 \
+  -na --discount 0.99 -lr 0.001 -s 128 --exp_name pendulum
+
+# Attempt 3 (reaches 1000 at ~347K steps, lr still too low)
+uv run src/scripts/run.py --env_name InvertedPendulum-v4 -n 100 -b 4000 \
+  -eb 800 -rtg --use_baseline -blr 0.005 -bgs 5 --gae_lambda 0.98 \
+  -na --discount 0.99 -lr 0.001 -s 128 --exp_name pendulum
+
 # Best configuration (reaches 1000 at ~35K steps)
 uv run src/scripts/run.py --env_name InvertedPendulum-v4 -n 200 -b 1000 \
   -eb 800 -rtg --use_baseline -blr 0.005 -bgs 5 --gae_lambda 0.98 \

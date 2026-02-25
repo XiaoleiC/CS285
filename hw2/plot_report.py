@@ -135,29 +135,26 @@ plt.savefig(os.path.join(FIG_DIR, "lunarlander_gae.png"), dpi=150)
 plt.close()
 
 # ============================================================
-# Figure 6: InvertedPendulum best vs default-like
+# Figure 6: InvertedPendulum - all tuning runs
 # ============================================================
 plt.figure(figsize=(10, 6))
-# Best run: 211743 (lr=0.02, batch=1000, reaches 1000 at ~35k steps)
-d_best = "InvertedPendulum-v4_pendulum_sd1_20260224_211743"
-df_best = load_csv(d_best)
-plt.plot(df_best["Train_EnvstepsSoFar"], df_best["Eval_AverageReturn"], label="Best (lr=0.02, b=1000)")
 
-# Another run for comparison: 132703
-d_other = "InvertedPendulum-v4_pendulum_sd1_20260224_132703"
-df_other = load_csv(d_other)
-plt.plot(df_other["Train_EnvstepsSoFar"], df_other["Eval_AverageReturn"], label="Tuning attempt (lr=0.001, b=4000)")
-
-# Another run: 134932 (reaches 1000 but slower)
-d_other2 = "InvertedPendulum-v4_pendulum_sd1_20260224_134932"
-df_other2 = load_csv(d_other2)
-plt.plot(df_other2["Train_EnvstepsSoFar"], df_other2["Eval_AverageReturn"], label="Tuning attempt (blr=0.005, b=4000)")
+pendulum_runs = [
+    ("InvertedPendulum-v4_pendulum_sd1_20260225_140616", "Default (lr=0.005, b=5000)", "C4", "--", 1.5),
+    ("InvertedPendulum-v4_pendulum_sd1_20260224_132703", "Attempt 1 (lr=0.001, b=4000, blr=0.001)", "C2", "-", 1.2),
+    ("InvertedPendulum-v4_pendulum_sd1_20260224_134328", "Attempt 2 (lr=0.001, b=1000, gae=0.99)", "C3", "-", 1.2),
+    ("InvertedPendulum-v4_pendulum_sd1_20260224_134932", "Attempt 3 (lr=0.001, b=4000, blr=0.005)", "C1", "-", 1.2),
+    ("InvertedPendulum-v4_pendulum_sd1_20260224_211743", "Best (lr=0.02, b=1000)", "C0", "-", 2.5),
+]
+for dirname, label, color, ls, lw in pendulum_runs:
+    df = load_csv(dirname)
+    plt.plot(df["Train_EnvstepsSoFar"], df["Eval_AverageReturn"], label=label, color=color, linestyle=ls, linewidth=lw)
 
 plt.axhline(y=1000, color='r', linestyle='--', alpha=0.5, label="Target (1000)")
 plt.xlabel("Environment Steps (Train_EnvstepsSoFar)")
 plt.ylabel("Eval Average Return")
 plt.title("InvertedPendulum-v4: Hyperparameter Tuning")
-plt.legend()
+plt.legend(fontsize=8)
 plt.grid(True, alpha=0.3)
 plt.tight_layout()
 plt.savefig(os.path.join(FIG_DIR, "pendulum_tuning.png"), dpi=150)
