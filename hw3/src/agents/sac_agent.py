@@ -218,7 +218,7 @@ class SoftActorCritic(nn.Module):
             ), next_qs.shape
 
             # TODO(Section 3.2): Compute the target Q-value
-            target_values = reward.unsqueeze(0) + (1 - done.unsqueeze(0)) * self.discount * next_qs
+            target_values = reward.unsqueeze(0) + (1 - done.float().unsqueeze(0)) * self.discount * next_qs
             # ENDTODO
             assert target_values.shape == (
                 self.num_critic_networks,
