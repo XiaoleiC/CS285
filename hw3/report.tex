@@ -46,11 +46,11 @@ We trained DQN with double-Q learning on MsPacman. Figure~\ref{fig:mspacman} sho
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{report_fig3_mspacman.png}
-\caption{MsPacman DQN: Training return (smoothed) and eval return plotted together.}
+\caption{MsPacman DQN: Raw training episode return (\texttt{Train\_EpisodeReturn}) and evaluation average return (\texttt{Eval\_AverageReturn}) plotted together.}
 \label{fig:mspacman}
 \end{figure}
 
-\textbf{Explaining the difference between train and eval returns:} Early in training, the training return is significantly lower than the eval return. This is because during training, the agent uses an $\epsilon$-greedy exploration strategy with a high $\epsilon$ value (close to 1.0), meaning most actions are taken randomly, which leads to poor performance. In contrast, during evaluation, the agent acts greedily (or with a very small $\epsilon$), using the learned Q-values to select the best actions. As training progresses and $\epsilon$ decays, the training return gradually approaches the eval return because the agent explores less and exploits its learned policy more. Additionally, eval episodes are averaged over multiple rollouts, which can lead to higher and more stable returns compared to individual training episodes.
+\textbf{Explaining the difference between train and eval returns:} The two curves differ because they are measured under different policies and with different amounts of averaging. During training, \texttt{Train\_EpisodeReturn} is the return of a single online episode collected with an $\epsilon$-greedy policy, so it is much noisier and is affected by ongoing exploration. During evaluation, \texttt{Eval\_AverageReturn} is computed by running multiple evaluation episodes with the greedy policy (equivalently $\epsilon=0$ in our implementation) and averaging their returns, so it is much smoother. As a result, the curves do not need to match, and either one can be higher at different stages of training. In this run, the early training episodes are mostly around 200--330 while the eval return stays at 60 for the first 20k steps, and later the eval curve improves sharply once the learned policy becomes effective.
 
 \subsection{Hyperparameter Experiment (Section 2.6)}
 
@@ -68,34 +68,34 @@ We chose to experiment with the \textbf{learning rate} on LunarLander-v2, testin
 
 \subsection{Actor Update with Reparametrization (Section 3.4)}
 
-We trained SAC on HalfCheetah-v4 with a fixed temperature of $\beta = 0.1$. As shown in Figure~\ref{fig:halfcheetah}, the agent achieves a peak eval return of 9254, well above the 6000 target.
+We trained SAC on HalfCheetah-v4 with a fixed entropy coefficient (temperature parameter) of $\beta = 0.1$. As shown in Figure~\ref{fig:halfcheetah}, the agent achieves a peak eval return of 9254, well above the 6000 target.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=0.75\textwidth]{report_fig5_halfcheetah_sac.png}
-\caption{HalfCheetah-v4 SAC with fixed temperature: Eval return over environment steps.}
+\caption{HalfCheetah-v4 SAC with fixed entropy coefficient $\beta = 0.1$: Eval return over environment steps.}
 \label{fig:halfcheetah}
 \end{figure}
 
 \subsection{Automatic Temperature Tuning (Section 3.5)}
 
-Figure~\ref{fig:autotune} compares fixed-temperature and auto-tuned SAC on HalfCheetah-v4, and shows the evolution of the learned temperature $\alpha$ over training.
+Figure~\ref{fig:autotune} compares fixed-coefficient and auto-tuned SAC on HalfCheetah-v4, and shows the evolution of the learned entropy coefficient $\alpha$ over training.
 
 \begin{figure}[H]
 \centering
 \includegraphics[width=\textwidth]{report_fig6_halfcheetah_autotune.png}
-\caption{Left: Eval return comparison between fixed ($\beta=0.1$) and auto-tuned SAC on HalfCheetah-v4. Right: Learned temperature $\alpha$ over training for the auto-tuned run.}
+\caption{Left: Eval return comparison between fixed ($\beta=0.1$) and auto-tuned SAC on HalfCheetah-v4. Right: Learned entropy coefficient $\alpha$ over training for the auto-tuned run.}
 \label{fig:autotune}
 \end{figure}
 
 \textbf{Does auto-tuning improve or achieve comparable performance to the fixed temperature?}
-Auto-tuning achieves comparable performance to the fixed temperature setting. Both reach peak returns around 9250--9300, with the auto-tuned version showing slightly smoother learning in the early stages. Since the fixed temperature ($\beta = 0.1$) is already well-tuned for HalfCheetah, the main advantage of auto-tuning is eliminating the need for manual temperature selection.
+Auto-tuning achieves comparable performance to the fixed entropy coefficient setting. Both reach peak returns around 9250--9300, with the auto-tuned version showing slightly smoother learning in the early stages. Since the fixed coefficient ($\beta = 0.1$) is already well-tuned for HalfCheetah, the main advantage of auto-tuning is eliminating the need for manual coefficient selection.
 
 \textbf{How does the temperature evolve during training?}
-The temperature initially drops sharply from 0.1 to approximately 0.025 in the first $\sim$100k steps, then gradually increases back to around 0.11 where it stabilizes for the remainder of training.
+Here, ``temperature'' refers to the entropy coefficient $\alpha$ in the SAC objective. It initially drops sharply from 0.1 to approximately 0.025 in the first $\sim$100k steps, then gradually increases back to around 0.11 where it stabilizes for the remainder of training.
 
 \textbf{Why might the temperature change in this particular way for HalfCheetah?}
-The initial decrease occurs because early in training, the policy is nearly random and already has high entropy, so the algorithm reduces the entropy bonus to allow the critic to learn more accurate Q-values without excessive noise. As training progresses and the policy becomes more deterministic (converging toward exploitation), the temperature increases to maintain sufficient exploration and prevent premature convergence. The eventual stabilization around 0.11 (close to the manually-tuned value of 0.1) indicates that the dual gradient descent has found a balance between exploration and exploitation that satisfies the target entropy constraint, which for HalfCheetah's 6-dimensional action space is $\mathcal{H}_{\text{target}} = -6$.
+The learned entropy coefficient is adapting to enforce the target entropy constraint. Early in training, the policy has very high entropy, so the dual update decreases $\alpha$ and reduces the entropy bonus. Later, as the policy becomes more concentrated and its entropy falls toward the target, $\alpha$ increases again to encourage enough stochasticity. The eventual stabilization around 0.11 indicates that the auto-tuning procedure has found a coefficient that keeps the policy entropy near the target value. For HalfCheetah's 6-dimensional action space, this target is $\mathcal{H}_{\text{target}} = -6$.
 
 \subsection{Stabilizing Target Values (Section 3.6)}
 
