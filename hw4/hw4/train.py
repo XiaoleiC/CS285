@@ -211,13 +211,15 @@ def compute_group_advantages(rewards: torch.Tensor, group_size: int, eps: float 
     rewards_2d = rewards.view(-1, group_size)
     group_means = rewards_2d.mean(dim=1, keepdim=True)
     group_stds = rewards_2d.std(dim=1, unbiased=False, keepdim=True)
+    centered = rewards_2d - group_means
 
-    if torch.any(group_stds < eps):
-        return torch.zeros_like(rewards)
-
-    A_2d = (rewards_2d - group_means) / (group_stds + eps)
-    A = A_2d.view(-1)
-    return A
+    stable_groups = group_stds >= eps
+    A_2d = torch.where(
+        stable_groups,
+        centered / (group_stds + eps),
+        torch.zeros_like(centered),
+    )
+    return A_2d.view(-1)
 
 
 def maybe_normalize_advantages(advantages: torch.Tensor, enabled: bool, eps: float = 1e-6) -> torch.Tensor:
