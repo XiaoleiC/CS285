@@ -1,0 +1,799 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{amsmath,amssymb,amsthm,mathtools}
+\usepackage{hyperref}
+\usepackage{enumitem}
+\usepackage{booktabs}
+\usepackage{microtype}
+\allowdisplaybreaks
+
+\hypersetup{
+  colorlinks=true,
+  linkcolor=blue,
+  urlcolor=blue
+}
+
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Prb}{\mathbb{P}}
+\newcommand{\KL}{D_{\mathrm{KL}}}
+\newcommand{\TV}{D_{\mathrm{TV}}}
+\newcommand{\1}{\mathbf{1}}
+\newcommand{\eps}{\epsilon}
+
+\title{CS 185/285 Practice Questions Solutions}
+\author{}
+\date{\today}
+
+\begin{document}
+\maketitle
+
+\section*{Note}
+This document is based on \texttt{Practice Questions.pdf} and \texttt{Practice Questions (Answers).pdf}. The answer sheet is assumed to be correct. Therefore, the goal here is not to guess the answers again, but to explain rigorously why those answers are correct.
+
+\section*{Answer Key}
+\begin{center}
+\begin{tabular}{llll}
+\toprule
+Question & Answer & Question & Answer \\
+\midrule
+1.1 & e & 6.1 & a \\
+1.2 & c & 6.2 & b \\
+1.3 & b & 7.1 & a \\
+2.1 & d & 7.2 & a,b,c,d \\
+2.2 & d & 8 & b,d,f,j,m \\
+3 & b & 9.1 & $(\ge,\ ?)$ \\
+4 & a,g & 9.2 & $(=,\ =)$ \\
+5.1 & d & 10 & d \\
+5.2 & f & & \\
+5.3 & c & & \\
+\bottomrule
+\end{tabular}
+\end{center}
+
+\section{Q1: Distribution Shift for Success/Failure Tasks}
+
+\subsection*{1.1 Why the answer is \texttt{e}}
+Failure means that the final state is not in the success set $\Omega$. Therefore
+\[
+p_\theta(\tau \text{ failed})
+= \Pr_{\tau\sim \pi_\theta}(s_H\notin \Omega)
+= \sum_{s_H} p_{\pi_\theta}(s_H)\,\1(s_H\notin \Omega).
+\]
+This is exactly option \texttt{e}.
+
+\subsection*{1.2 Why the answer is \texttt{c}}
+Start from the correct expression above:
+\[
+p_\theta(\tau \text{ failed})
+= \sum_{s_H} p_{\pi_\theta}(s_H)\,\1(s_H\notin \Omega).
+\]
+Add and subtract $p_{train}(s_H)$:
+\[
+\begin{aligned}
+p_\theta(\tau \text{ failed})
+&=
+\sum_{s_H}
+\bigl(p_{\pi_\theta}(s_H)-p_{train}(s_H)\bigr)\1(s_H\notin \Omega) \\
+&\qquad +
+\sum_{s_H} p_{train}(s_H)\1(s_H\notin \Omega).
+\end{aligned}
+\]
+Using the triangle inequality,
+\[
+p_\theta(\tau \text{ failed})
+\le
+\sum_{s_H}\left|p_{\pi_\theta}(s_H)-p_{train}(s_H)\right|
++ \sum_{s_H} p_{train}(s_H)\1(s_H\notin \Omega).
+\]
+This is exactly option \texttt{c}.
+
+Now use the fact that the expert policy always succeeds. Hence under $p_{train}$ we never end outside $\Omega$, so
+\[
+\sum_{s_H} p_{train}(s_H)\1(s_H\notin \Omega)=0.
+\]
+Therefore
+\[
+p_\theta(\tau \text{ failed})
+\le
+\sum_{s_H}\left|p_{\pi_\theta}(s_H)-p_{train}(s_H)\right|.
+\]
+Lecture already gave
+\[
+\sum_{s_t}\left|p_{\pi_\theta}(s_t)-p_{train}(s_t)\right|\le \eps t.
+\]
+Setting $t=H$ yields
+\[
+p_\theta(\tau \text{ failed})\le \eps H.
+\]
+
+\subsection*{1.3 Why the answer is \texttt{b}}
+From the previous part,
+\[
+p_\theta(\tau \text{ failed})\le \eps H.
+\]
+Among the provided choices, the tightest upper bound is \texttt{b}.
+
+For reference, a slightly sharper bound is
+\[
+p_\theta(\tau \text{ failed})
+\le 1-(1-\eps)^H
+\le \eps H,
+\]
+but that sharper expression does not appear in the multiple-choice options.
+
+\section{Q2: Open Loop Control}
+
+\subsection*{2.1 Why the answer is \texttt{d}}
+The question asks which statement is \emph{not} true.
+
+\paragraph{(a) True}
+An optimal open-loop policy need not be stationary. For example, a task may require action sequence $x$ followed by $y$. Then the optimal open-loop controller is time-varying, while stationary open-loop sequences like $x,x,x,\dots$ or $y,y,y,\dots$ fail.
+
+\paragraph{(b) True}
+If the initial state and dynamics are deterministic, then any closed-loop policy induces a unique trajectory from the start state. That trajectory corresponds to a single fixed action sequence, so an open-loop controller can reproduce it exactly. Since every open-loop controller is also a special case of a closed-loop controller,
+\[
+\sup_A J(A)=\sup_\pi J(\pi).
+\]
+
+\paragraph{(c) True}
+Construct a continuous-state example. Let the initial state be $x\sim \mathrm{Unif}[0,1]$, and the action space also be $[0,1]$. If the first action satisfies $a=x$, go to a good terminal state $g$; otherwise go to a bad terminal state $b$. Let $r(g)=(1-\gamma)/\gamma$ and $r(b)=0$. Then the closed-loop policy $\pi(x)=x$ achieves total return
+\[
+\sum_{t=1}^\infty \gamma^t \frac{1-\gamma}{\gamma}=1.
+\]
+But any open-loop controller must pick a fixed constant $a_0$, and $\Pr(x=a_0)=0$, so the best open-loop return is 0.
+
+\paragraph{(d) False}
+Counterexample: two states $s$ and absorbing state $g$. At $s$, action \texttt{wait} stays in $s$, and action \texttt{quit} transitions to $g$. Consider the open-loop sequence: at $t=0$ choose \texttt{wait}, and for all $t\ge 1$ choose \texttt{quit}. Its discounted occupancy measure is
+\[
+p_A(s)=1+\gamma,\qquad p_A(g)=\frac{\gamma^2}{1-\gamma}.
+\]
+But a deterministic Markovian policy can only be one of the following:
+\[
+\pi_{wait}(s)=\texttt{wait}
+\quad\Rightarrow\quad
+p_\pi(s)=\frac{1}{1-\gamma},
+\]
+\[
+\pi_{quit}(s)=\texttt{quit}
+\quad\Rightarrow\quad
+p_\pi(s)=1,\qquad p_\pi(g)=\frac{\gamma}{1-\gamma}.
+\]
+Neither matches $p_A$. Hence statement \texttt{d} is false, so \texttt{2.1} is \texttt{d}.
+
+\subsection*{2.2 Why the answer is \texttt{d}}
+\paragraph{(a) False}
+CEM does not in general come with an almost-sure global convergence guarantee. The sampling distribution may collapse around a local optimum.
+
+\paragraph{(b) False}
+Random shooting uses a fixed proposal distribution. CEM updates the proposal distribution using elites. Only the very first iteration may look like random shooting.
+
+\paragraph{(c) False}
+The claim is too strong. Even if the proposal distribution does not depend on elites, repeated independent random shooting still finds the optimum with probability 1, as long as the proposal assigns positive probability to the optimal sequence.
+
+\paragraph{(d) True}
+CEM is a gradient-free, derivative-free method. It only needs to sample action sequences and evaluate them.
+
+\paragraph{(e) False}
+CEM is used in both continuous and discrete action spaces.
+
+\section{Q3: Entropy Regularized Policy Gradient}
+The correct answer is \texttt{b}.
+
+The objective is
+\[
+J(\theta)=
+\E_{s\sim p(s),\,a\sim \pi_\theta(\cdot|s)}[r(s,a)]
++ H(\pi_\theta(\cdot|s)).
+\]
+Since
+\[
+H(\pi_\theta(\cdot|s))
+= -\E_{a\sim \pi_\theta(\cdot|s)}[\log \pi_\theta(a|s)],
+\]
+we can rewrite
+\[
+J(\theta)
+= \E_{s,a}\big[r(s,a)-\log \pi_\theta(a|s)\big].
+\]
+
+Now apply the score-function identity to $\E_{a\sim \pi_\theta}[f_\theta(a)]$:
+\[
+\nabla_\theta \E_{a\sim \pi_\theta}[f_\theta(a)]
+=
+\E_{a\sim \pi_\theta}
+\big[
+\nabla_\theta \log \pi_\theta(a)\,f_\theta(a)
++\nabla_\theta f_\theta(a)
+\big].
+\]
+Here
+\[
+f_\theta(a)=r(s,a)-\log \pi_\theta(a|s),
+\qquad
+\nabla_\theta f_\theta(a)=-\nabla_\theta \log \pi_\theta(a|s).
+\]
+Thus
+\[
+\nabla_\theta J(\theta)
+=
+\E_{s,a}
+\Big[
+\nabla_\theta \log \pi_\theta(a|s)\big(r(s,a)-\log \pi_\theta(a|s)\big)
+-\nabla_\theta \log \pi_\theta(a|s)
+\Big].
+\]
+Equivalently,
+\[
+\nabla_\theta J(\theta)
+=
+\E_{s,a}
+\Big[
+\nabla_\theta \log \pi_\theta(a|s)\big(r(s,a)-\log \pi_\theta(a|s)-1\big)
+\Big].
+\]
+Because
+\[
+\E_{a\sim \pi_\theta(\cdot|s)}[\nabla_\theta \log \pi_\theta(a|s)]
+= \nabla_\theta \sum_a \pi_\theta(a|s)=0,
+\]
+the constant $-1$ can be absorbed into a constant baseline $b$. Therefore an unbiased sample estimator is
+\[
+\nabla_\theta J(\theta)
+\approx
+\frac{1}{N}\sum_{i=1}^N
+\nabla_\theta \log \pi_\theta(a_i|s_i)
+\Big[r(s_i,a_i)-\log \pi_\theta(a_i|s_i)-b\Big].
+\]
+This is exactly option \texttt{b}.
+
+\section{Q4: Learning in Simulation}
+The correct answers are \texttt{a} and \texttt{g}.
+
+For each $(s,a)$, the problem assumes
+\[
+\KL\big(P(\cdot|s,a)\,\|\,f(\cdot|s,a)\big)<\eps^2.
+\]
+By Pinsker,
+\[
+\sum_x |P(x|s,a)-f(x|s,a)|
+\le \sqrt{2\KL(P\|f)}
+< \sqrt{2}\,\eps,
+\]
+so
+\[
+\TV\big(P(\cdot|s,a),f(\cdot|s,a)\big)
+\le \frac{\eps}{\sqrt{2}}.
+\]
+Define
+\[
+\delta := \sup_{s,a}\TV\big(P(\cdot|s,a),f(\cdot|s,a)\big)\le \frac{\eps}{\sqrt{2}}.
+\]
+
+\subsection*{Step 1: Compare values under a fixed policy}
+For any fixed policy $\pi$, define
+\[
+\Delta_\pi(s):=V_M^\pi(s)-V_F^\pi(s).
+\]
+Because rewards are the same and only transitions differ,
+\[
+\Delta_\pi(s)
+=
+\gamma \E_{a\sim \pi(\cdot|s)}
+\Big[
+\E_P[V_M^\pi(s')] - \E_f[V_F^\pi(s')]
+\Big].
+\]
+Add and subtract $\E_P[V_F^\pi(s')]$:
+\[
+\Delta_\pi(s)
+=
+\gamma \E_a
+\Big[
+\E_P[\Delta_\pi(s')]
++ (\E_P-\E_f)V_F^\pi(s')
+\Big].
+\]
+Since $0\le r\le 1$,
+\[
+0\le V_F^\pi(s)\le \frac{1}{1-\gamma},
+\qquad
+\mathrm{span}(V_F^\pi)\le \frac{1}{1-\gamma}.
+\]
+Also,
+\[
+\left|\E_p[g]-\E_q[g]\right|
+\le \TV(p,q)\,\mathrm{span}(g).
+\]
+Hence
+\[
+\left|(\E_P-\E_f)V_F^\pi\right|
+\le \delta\cdot \frac{1}{1-\gamma}.
+\]
+Taking sup norms gives
+\[
+\|\Delta_\pi\|_\infty
+\le
+\gamma \|\Delta_\pi\|_\infty
++ \frac{\gamma\delta}{1-\gamma},
+\]
+so
+\[
+\|\Delta_\pi\|_\infty
+\le
+\frac{\gamma\delta}{(1-\gamma)^2}.
+\]
+
+\subsection*{Step 2: Bound regret}
+\[
+\widetilde R_M(\pi_F^*)
+=
+J_M(\pi_M^*)-J_M(\pi_F^*).
+\]
+Add and subtract $J_F$:
+\[
+\begin{aligned}
+\widetilde R_M(\pi_F^*)
+&=
+\big(J_M(\pi_M^*)-J_F(\pi_M^*)\big)
++\big(J_F(\pi_M^*)-J_F(\pi_F^*)\big) \\
+&\qquad
++\big(J_F(\pi_F^*)-J_M(\pi_F^*)\big).
+\end{aligned}
+\]
+Because $\pi_F^*$ is optimal in $F$,
+\[
+J_F(\pi_M^*)-J_F(\pi_F^*)\le 0.
+\]
+Therefore
+\[
+\widetilde R_M(\pi_F^*)
+\le
+|J_M(\pi_M^*)-J_F(\pi_M^*)|
++|J_M(\pi_F^*)-J_F(\pi_F^*)|.
+\]
+Applying the fixed-policy bound twice,
+\[
+\widetilde R_M(\pi_F^*)
+\le
+2\frac{\gamma\delta}{(1-\gamma)^2}
+\le
+2\frac{\gamma}{(1-\gamma)^2}\cdot \frac{\eps}{\sqrt{2}}
+=
+\eps\gamma\sqrt{2}\,(1-\gamma)^{-2}.
+\]
+This is exactly option \texttt{a}.
+
+Option \texttt{g} is also valid because it is weaker. Indeed,
+\[
+\eps\gamma\sqrt{2}(1-\gamma)^{-2}
+\le
+\eps\sqrt{2}(1-\gamma)^{-5/2}
+\]
+is equivalent to
+\[
+\gamma\sqrt{1-\gamma}\le 1,
+\]
+which holds for all $0<\gamma<1$.
+
+\section{Q5: Computing the Policy Gradient}
+The correct answers are \texttt{5.1 = d}, \texttt{5.2 = f}, and \texttt{5.3 = c}.
+
+\subsection*{First derive $J(\theta)$ explicitly}
+From the diagram:
+\begin{itemize}[leftmargin=2em]
+\item $s_0 \xrightarrow{a_1,\ r=1} s_3$
+\item $s_3 \xrightarrow{a_1,a_2,\ r=0} s_1$
+\item $s_1 \xrightarrow{a_1,a_2,\ r=0} s_0$
+\item $s_0 \xrightarrow{a_2,\ r=0} s_2$
+\item $s_2 \xrightarrow{a_1,\ r=0} s_1$
+\item $s_2 \xrightarrow{a_2,\ r=0} s_4$
+\item $s_4 \xrightarrow{a_1,a_2,\ r=2/\gamma} s_0$
+\end{itemize}
+At every state,
+\[
+\pi_\theta(a_1|s)=1-\theta,\qquad \pi_\theta(a_2|s)=\theta.
+\]
+
+Let $V_i:=V^\pi(s_i)$, especially $V_0=J(\theta)$. Then
+\[
+V_1=\gamma V_0,\qquad
+V_3=\gamma V_1=\gamma^2 V_0,
+\]
+\[
+V_4=\frac{2}{\gamma}+\gamma V_0.
+\]
+At state $s_2$,
+\[
+\begin{aligned}
+V_2
+&=(1-\theta)\gamma V_1+\theta \gamma V_4 \\
+&=(1-\theta)\gamma^2V_0+\theta\gamma\left(\frac{2}{\gamma}+\gamma V_0\right) \\
+&=\gamma^2V_0+2\theta.
+\end{aligned}
+\]
+At state $s_0$,
+\[
+V_0=(1-\theta)(1+\gamma V_3)+\theta(\gamma V_2).
+\]
+Substituting $V_3$ and $V_2$,
+\[
+\begin{aligned}
+V_0
+&=(1-\theta)(1+\gamma^3V_0)+\theta(\gamma^3V_0+2\gamma\theta) \\
+&=1-\theta+\gamma^3V_0+2\gamma\theta^2.
+\end{aligned}
+\]
+Hence
+\[
+J(\theta)=V_0=\frac{1-\theta+2\gamma\theta^2}{1-\gamma^3}.
+\]
+
+\subsection*{5.1 Why the answer is \texttt{d}}
+Differentiate:
+\[
+\nabla_\theta J(\theta)
+=
+\frac{-1+4\gamma\theta}{1-\gamma^3}
+=
+\frac{4\theta\gamma-1}{1-\gamma^3}.
+\]
+So the correct choice is \texttt{d}.
+
+\subsection*{5.2 Why the answer is \texttt{f}}
+We only need to maximize the numerator
+\[
+N(\theta)=1-\theta+2\gamma\theta^2.
+\]
+Since
+\[
+N''(\theta)=4\gamma>0,
+\]
+the function is convex, so on the interval $[0,1]$ the maximum occurs at an endpoint. Compare:
+\[
+N(0)=1,\qquad N(1)=2\gamma.
+\]
+Given $\gamma>1/2$, we have $2\gamma>1$, so the maximizer is $\theta^*=1$. Thus
+\[
+J(\theta^*)=J(1)=\frac{2\gamma}{1-\gamma^3}.
+\]
+Therefore the answer is \texttt{f}.
+
+\subsection*{5.3 Why the answer is \texttt{c}}
+Set $\gamma=3/4$:
+\[
+\nabla_\theta J(\theta)
+=
+\frac{3\theta-1}{1-27/64}.
+\]
+The denominator is positive, so the sign is determined by $3\theta-1$.
+\begin{itemize}[leftmargin=2em]
+\item If $\theta>1/3$, the gradient is positive, so gradient ascent pushes $\theta$ upward toward the optimal endpoint $\theta=1$.
+\item If $\theta<1/3$, the gradient is negative, so the iterates move toward $\theta=0$.
+\item If $\theta=1/3$, the gradient is 0 and the iterate gets stuck at a non-optimal stationary point.
+\end{itemize}
+Hence the basin of attraction of the optimal policy is
+\[
+\theta>1/3,
+\]
+which is option \texttt{c}.
+
+\section{Q6: Imitation Learning Analysis}
+The correct answers are \texttt{6.1 = a} and \texttt{6.2 = b}.
+
+Define the expert-state error rate at time $t$:
+\[
+\eps_t
+:=
+\E_{s_t\sim p_{\pi^*}(s_t)}
+\big[
+\Pr(\pi_\theta(s_t)\neq \pi^*(s_t)\mid s_t)
+\big].
+\]
+The problem gives
+\[
+\frac{1}{T}\sum_{t=1}^T \eps_t \le \eps,
+\qquad\Longrightarrow\qquad
+\sum_{t=1}^T \eps_t \le T\eps.
+\]
+
+\subsection*{Key coupling argument}
+Couple the expert trajectory and the learned-policy trajectory. As long as no mistake has happened yet, the two trajectories are identical. Therefore the probability that they have already diverged before time $t$ is at most
+\[
+\Prb(\text{diverged before }t)\le \sum_{i=1}^{t-1}\eps_i.
+\]
+Hence
+\[
+\TV\big(p_{\pi_\theta}(s_t),p_{\pi^*}(s_t)\big)
+\le
+\sum_{i=1}^{t-1}\eps_i.
+\]
+Since $|r(s_t)|\le 1$,
+\[
+\left|\E_p[r]-\E_q[r]\right|\le 2\,\TV(p,q).
+\]
+
+\subsection*{6.1 General state-only reward}
+\[
+\begin{aligned}
+J(\pi^*)-J(\pi_\theta)
+&\le
+2\sum_{t=1}^T \TV\big(p_{\pi_\theta}(s_t),p_{\pi^*}(s_t)\big) \\
+&\le
+2\sum_{t=1}^T\sum_{i=1}^{t-1}\eps_i \\
+&=
+2\sum_{i=1}^{T-1}(T-i)\eps_i \\
+&\le
+2T\sum_{i=1}^T \eps_i \\
+&\le
+2T^2\eps.
+\end{aligned}
+\]
+Therefore
+\[
+J(\pi^*)-J(\pi_\theta)=O(T^2\eps),
+\]
+so the correct choice is \texttt{a}.
+
+\subsection*{6.2 Reward only at the final state}
+Now we only care about $t=T$:
+\[
+\begin{aligned}
+J(\pi^*)-J(\pi_\theta)
+&\le
+2\,\TV\big(p_{\pi^*}(s_T),p_{\pi_\theta}(s_T)\big) \\
+&\le
+2\sum_{i=1}^{T-1}\eps_i \\
+&\le
+2T\eps.
+\end{aligned}
+\]
+Therefore
+\[
+J(\pi^*)-J(\pi_\theta)=O(T\eps),
+\]
+so the correct choice is \texttt{b}.
+
+\section{Q7: IQL Variants}
+The correct answers are \texttt{7.1 = a} and \texttt{7.2 = a,b,c,d}.
+
+The expectile loss is
+\[
+\ell_\tau^2(x)=|\,\1(x>0)-\tau\,|x^2.
+\]
+Two key facts:
+\begin{itemize}[leftmargin=2em]
+\item When $\tau=0.5$, this becomes ordinary squared error, so the sign direction no longer matters.
+\item When $\tau\to 1$, minimizing $\E[\ell_\tau^2(v-X)]$ pushes $v$ toward the upper expectile of $X$, while minimizing $\E[\ell_\tau^2(X-v)]$ pushes $v$ toward the lower expectile.
+\end{itemize}
+
+\subsection*{7.1 Why only \texttt{a} is unbiased for $Q^*$}
+\paragraph{(a) Correct}
+Here
+\[
+L_\psi=\E_{s,a\sim D}\big[\ell_\tau^2(V_\psi(s)-Q_{\bar\phi}(s,a))\big].
+\]
+As $\tau\to 1$, $V_\psi(s)$ approaches $\max_a Q(s,a)$. Therefore the Q target becomes
+\[
+r(s,a)+\gamma \max_{a'}Q(s',a'),
+\]
+which is exactly the Bellman optimality target.
+
+\paragraph{(b) Incorrect}
+The direction is reversed:
+\[
+\ell_\tau^2(Q_{\bar\phi}(s,a)-V_\psi(s)).
+\]
+As $\tau\to 1$, this pushes $V_\psi(s)$ toward the lower side of the action-value distribution rather than the maximum.
+
+\paragraph{(c) Incorrect}
+This performs expectile regression directly on the random target
+\[
+Y=r(s,a)+\gamma Q_{\bar\phi}(s',a').
+\]
+In a stochastic environment, the upper expectile of $Y$ is not equal in general to
+\[
+\E_{s'}\big[\max_{a'}Q(s',a')\mid s,a\big].
+\]
+
+\paragraph{(d) Incorrect}
+Same issue as (c), but in the opposite direction: it tends toward the lower side of the target distribution.
+
+\subsection*{7.2 Why all four are unbiased for $Q^{\pi_\beta}$ when $\tau=0.5$}
+\paragraph{(a) and (b)}
+When $\tau=0.5$, the expectile loss becomes ordinary squared error, so
+\[
+V(s)=\E_{a\sim \pi_\beta(\cdot|s)}[Q(s,a)].
+\]
+Plugging this into the Q update gives
+\[
+Q(s,a)
+=
+\E\big[r+\gamma \E_{a'\sim \pi_\beta(\cdot|s')}Q(s',a')\mid s,a\big]
+= \mathcal T^{\pi_\beta}Q(s,a).
+\]
+
+\paragraph{(c) and (d)}
+Again, with $\tau=0.5$ these are just squared TD losses with sample target
+\[
+r+\gamma Q(s',a').
+\]
+Because $a'$ is sampled from the dataset policy $\pi_\beta$, the conditional expectation of this target is exactly the Bellman operator for $Q^{\pi_\beta}$.
+
+\section{Q8: LLM MDPs}
+The correct answers are \texttt{b,d,f,j,m}.
+
+Let the final token sequence be $X_{1:H}$. Since the state is the prefix, the action is the next token, and the transition is deterministic concatenation,
+\[
+p_\pi(x_{1:H})=\prod_{t=1}^H \pi(x_t\mid x_{<t}).
+\]
+
+\paragraph{(a) False}
+A baseline still reduces the variance of REINFORCE.
+
+\paragraph{(b) True}
+The environment dynamics are already known exactly: $s'=s\oplus a$. Learning another dynamics model provides no new information.
+
+\paragraph{(c) False}
+Training a value function may be difficult, but it is certainly not impossible. Here
+\[
+V^\pi(s)=\Prb_\pi(\text{eventually produce a correct full answer}\mid s)
+\]
+is perfectly well-defined.
+
+\paragraph{(d) True}
+Because the transition is deterministic,
+\[
+Q^\pi(s,a)=r(s,a)+V^\pi(s\oplus a).
+\]
+So once we have $V$, a scalar $Q(s,a)$ carries no additional principled information.
+
+\paragraph{(e) False}
+Policy gradient still has a bias-variance tradeoff.
+
+\paragraph{(f) True}
+Control-as-inference does not require variational inference in every setting. In this deterministic finite MDP, one can perform exact dynamic programming.
+
+\paragraph{(g) False}
+DQN is inconvenient for a huge vocabulary, but not theoretically incompatible.
+
+\paragraph{(h) False}
+TRPO is also compatible with discrete action spaces.
+
+\paragraph{(i) False}
+Offline RL can be performed on a fixed dataset of prompt-response trajectories.
+
+\paragraph{(j) True}
+Next-token prediction is exactly behavioral cloning: state = prefix, action = next token, and the objective maximizes expert conditional log-likelihood.
+
+\paragraph{(k) False}
+Value iteration and policy iteration remain different algorithms.
+
+\paragraph{(l) False}
+Policy iteration does not generally find the optimum in a single policy-improvement step.
+
+\paragraph{(m) True}
+The final-state distribution is the full-sequence distribution, so
+\[
+H(p_\pi(s_H))
+= H(X_{1:H})
+= \sum_{t=1}^H H(X_t\mid X_{<t})
+= \sum_{t=1}^H \E_{s_t\sim p_\pi}[H(\pi(\cdot|s_t))].
+\]
+Thus maximizing action-distribution entropy at every state is sufficient to maximize the final-state entropy.
+
+\section{Q9: Multi-Step Dynamics Models}
+The correct answers are \texttt{9.1 = $(\ge,\ ?)$} and \texttt{9.2 = $(=,\ =)$}.
+
+\subsection*{9.1 Why the first relation is $\ge$}
+Take any 2-step chunk policy $\pi^{(2)}$. We can always simulate it in the original primitive-action MDP:
+\begin{itemize}[leftmargin=2em]
+\item At each even time step $t$, observe the chunk-start state $s_t$.
+\item Sample the full action chunk $(a_t,a_{t+1})$ from $\pi^{(2)}(\cdot\mid s_t)$.
+\item Execute $a_t$ at time $t$ and the precommitted $a_{t+1}$ at time $t+1$.
+\end{itemize}
+This reproduces the same trajectory distribution block by block, so it achieves the same return. Therefore the unrestricted 1-step optimal value must satisfy
+\[
+J^{(1)}(\pi_1^*)\ge J^{(2)}(\pi_2^*).
+\]
+
+The warning in the problem statement about stochastic optimal policies does not change this argument. A stochastic 2-step chunk policy can randomize over entire chunks, but it still cannot observe a random intermediate state inside the chunk before deciding the later action.
+
+\subsection*{9.1 Why the second relation is \texttt{?}}
+To prove ``?'' we need two counterexamples.
+
+\paragraph{Counterexample A: $J^{(2)}(\pi_2^*)>J^{(3)}(\pi_3^*)$}
+Let $H=6$. Suppose the key random information is revealed at time $t=2$, and the action at time 2 must match that information to obtain reward 1. A 2-step chunk policy can replan at $t=2$, so it gets value 1. A 3-step chunk policy must commit to the time-2 action already at $t=0$, so it can get at most $1/2$.
+
+\paragraph{Counterexample B: $J^{(2)}(\pi_2^*)<J^{(3)}(\pi_3^*)$}
+Now move the key random information to time $t=3$. Then a 3-step chunk policy replans at $t=3$ and gets value 1, whereas a 2-step chunk policy must commit to the time-3 action already at $t=2$, so it can get at most $1/2$.
+
+Hence there is no universal ordering between $J^{(2)}(\pi_2^*)$ and $J^{(3)}(\pi_3^*)$, so the correct symbol is \texttt{?}.
+
+\subsection*{9.2 Why both relations become equality under deterministic dynamics}
+If the dynamics are deterministic, then once the chunk-start state $s_t$ and the planned actions are known, all intermediate states inside the chunk are determined. Therefore any optimal 1-step policy can be compiled losslessly into an $n$-step chunk policy.
+
+Concretely, suppose $\pi_1^*$ is an optimal primitive-action policy. At a chunk start state $s_t$, we can compute
+\[
+a_t=\pi_1^*(s_t),\quad
+s_{t+1}=f(s_t,a_t),\quad
+a_{t+1}=\pi_1^*(s_{t+1}),\ \dots
+\]
+and thus construct the entire chunk
+\[
+(a_t,\dots,a_{t+n-1}).
+\]
+So
+\[
+J^{(n)}(\pi_n^*)\ge J^{(1)}(\pi_1^*).
+\]
+On the other hand, chunk policies are a restricted subclass of primitive policies, so
+\[
+J^{(1)}(\pi_1^*)\ge J^{(n)}(\pi_n^*).
+\]
+Combining both directions yields
+\[
+J^{(1)}(\pi_1^*)=J^{(2)}(\pi_2^*)=J^{(3)}(\pi_3^*).
+\]
+
+\section{Q10: Managing Distribution Shift in Offline RL}
+The correct answer is \texttt{d}.
+
+The KL constraint is
+\[
+D(\pi,\pi_\beta)
+=
+\E_{s\sim p_\pi}
+\Big[
+\KL\big(\pi(\cdot|s)\,\|\,\pi_\beta(\cdot|s)\big)
+\Big].
+\]
+We want to enforce this through a reward bonus so that the modified objective becomes
+\[
+J(\pi)-\lambda D(\pi,\pi_\beta).
+\]
+Therefore we want a bonus $b(s,a)$ satisfying
+\[
+\E_{s\sim p_\pi,\,a\sim \pi(\cdot|s)}[b(s,a)]
+=
+-D(\pi,\pi_\beta).
+\]
+
+Choose
+\[
+b(s,a)=\log \pi_\beta(a|s)-\log \pi(a|s).
+\]
+Then
+\[
+\begin{aligned}
+\E[b(s,a)]
+&=
+\E_{s\sim p_\pi}
+\left[
+\sum_a \pi(a|s)\big(\log \pi_\beta(a|s)-\log \pi(a|s)\big)
+\right] \\
+&=
+-\E_{s\sim p_\pi}
+\left[
+\sum_a \pi(a|s)\log\frac{\pi(a|s)}{\pi_\beta(a|s)}
+\right] \\
+&=
+-\E_{s\sim p_\pi}
+\Big[
+\KL\big(\pi(\cdot|s)\,\|\,\pi_\beta(\cdot|s)\big)
+\Big] \\
+&=
+-D(\pi,\pi_\beta).
+\end{aligned}
+\]
+This is exactly the desired Lagrangian penalty, so option \texttt{d} is correct.
+
+Why the other options are wrong:
+\begin{itemize}[leftmargin=2em]
+\item \texttt{a}: $-\log \pi(a|s)$ gives an entropy bonus, not a behavior-policy KL penalty.
+\item \texttt{b}: $\log \pi_\beta(a|s)$ is only the cross-entropy half of the KL expansion.
+\item \texttt{c}: $\log \pi(a|s)-\log \pi_\beta(a|s)$ gives $+KL$, which would encourage deviation from the behavior policy.
+\end{itemize}
+
+\end{document}
