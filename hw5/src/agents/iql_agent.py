@@ -59,7 +59,7 @@ class IQLAgent(nn.Module):
         Compute the expectile loss for IQL
         """
         # TODO(student): Implement the expectile loss
-        return ...
+        return (adv ** 2 * abs(expectile - (adv > 0).float())).mean()
 
     @torch.compile
     def update_v(
@@ -71,8 +71,8 @@ class IQLAgent(nn.Module):
         Update V(s) with expectile regression
         """
         # TODO(student): Compute the value loss
-        v = ...
-        loss = ...
+        v = self.value(observations)
+        loss = self.iql_expectile_loss(v - self.target_critic(observations, actions).min(dim=0).values.detach(), self.expectile)
 
         self.value_optimizer.zero_grad()
         loss.backward()
@@ -98,8 +98,10 @@ class IQLAgent(nn.Module):
         Update Q(s, a)
         """
         # TODO(student): Compute the Q loss
-        q = ...
-        loss = ...
+        q = self.critic(observations, actions)
+        with torch.no_grad():
+            target_q = rewards + self.discount * (1 - dones) * self.value(next_observations)
+        loss = nn.functional.mse_loss(q, target_q.expand_as(q))
 
         self.critic_optimizer.zero_grad()
         loss.backward()
@@ -122,8 +124,12 @@ class IQLAgent(nn.Module):
         Update the actor using advantage-weighted regression
         """
         # TODO(student): Compute the actor loss
-        dist = ...
-        loss = ...
+        dist = self.actor(observations)
+        with torch.no_grad():
+            adv = self.critic(observations, actions).min(dim=0).values - self.value(observations)
+        weights = torch.exp(self.alpha * adv).clamp(max=100.0)
+        loss = -dist.log_prob(actions) * weights
+        loss = loss.mean()
 
         self.actor_optimizer.zero_grad()
         loss.backward()
@@ -158,4 +164,6 @@ class IQLAgent(nn.Module):
 
     def update_target_critic(self) -> None:
         # TODO(student): Update target_critic using Polyak averaging with self.target_update_rate
-        ...
+        for param, target_param in zip(self.critic.parameters(), self.target_critic.parameters()):
+            target_param.data.copy_(self.target_update_rate * param.data + (1 - self.target_update_rate) * target_param.data)
+        return
