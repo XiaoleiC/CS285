@@ -1,0 +1,23 @@
+# OS artifacts
+.DS_Store
+
+# Python cache / build artifacts
+**/__pycache__/
+*.py[cod]
+
+# Experiment and logging artifacts
+**/exp/
+**/wandb/
+
+# AI assistant / vibe-coding local artifacts
+.codex/
+.claude/
+.cursor/
+.continue/
+.windsurf/
+.roo/
+.aider*
+CLAUDE.md
+claude.md
+CODEX.md
+codex.md
