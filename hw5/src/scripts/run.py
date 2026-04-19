@@ -5,6 +5,7 @@ from datetime import datetime
 import numpy as np
 import torch
 import tqdm
+import wandb
 
 import configs
 from agents import agents
@@ -123,13 +124,20 @@ def main(args):
         config['agent_kwargs']['alpha'] = args.alpha
         exp_name = f"{exp_name}_a{args.alpha}"
 
-    setup_wandb(project='cs285_hw5', name=exp_name, group=args.run_group, config=config)
+    run = setup_wandb(project='cs285_hw5', name=exp_name, group=args.run_group, config=config)
     args.save_dir = os.path.join(logdir_prefix, args.run_group, exp_name)
     os.makedirs(args.save_dir, exist_ok=True)
     train_logger = Logger(os.path.join(args.save_dir, 'train.csv'))
     eval_logger = Logger(os.path.join(args.save_dir, 'eval.csv'))
-
-    run_training_loop(config, train_logger, eval_logger, args)
+    success = False
+    try:
+        run_training_loop(config, train_logger, eval_logger, args)
+        success = True
+    finally:
+        train_logger.close()
+        eval_logger.close()
+        if run is not None:
+            wandb.finish(exit_code=0 if success else 1)
 
 
 if __name__ == "__main__":
