@@ -70,7 +70,7 @@ class FQLAgent(nn.Module):
             time += 1.0 / self.flow_steps
             a_t += vt / self.flow_steps
         action = a_t
-        action = torch.clamp(action, -1, 1)
+        # action = torch.clamp(action, -1, 1)
         return action
 
     @torch.compile
@@ -147,7 +147,7 @@ class FQLAgent(nn.Module):
         with torch.no_grad():
             bc_actions = self.get_bc_action(observations, noises)
         onestep_actions = self.onestep_actor(observations, noises)
-        distill_loss = self.alpha / actions.shape[1] * nn.functional.mse_loss(onestep_actions, bc_actions)
+        distill_loss = self.alpha * nn.functional.mse_loss(onestep_actions, bc_actions)
 
         # Hint: *Do* clip the one-step actor actions when feeding them to the critic
         q_loss = - self.critic(observations, torch.clamp(onestep_actions, -1, 1)).mean()
