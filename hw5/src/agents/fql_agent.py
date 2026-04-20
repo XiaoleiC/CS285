@@ -53,6 +53,7 @@ class FQLAgent(nn.Module):
         # Hint: Unlike SAC+BC and IQL, the evaluation action is *sampled* (i.e., not the mode or mean) from the policy
         noise = torch.randn(observation.shape[0], self.action_dim, device=observation.device)
         action = self.onestep_actor(observation, noise)
+        action = action + noise
         action = torch.clamp(action, -1, 1)
         return ptu.to_numpy(action)[0]
 
@@ -64,11 +65,11 @@ class FQLAgent(nn.Module):
         # TODO(student): Compute the BC flow action using the Euler method for `self.flow_steps` steps
         # Hint: This function should *only* be used in `update_onestep_actor`
         time = torch.zeros((*noise.shape[:-1], 1), device=noise.device)
-        a_t = noise
+        a_t = noise.clone()
         for _ in range(self.flow_steps):
             vt = self.bc_actor(observation, a_t, time)
-            time += 1.0 / self.flow_steps
-            a_t += vt / self.flow_steps
+            time = time + 1.0 / self.flow_steps
+            a_t = a_t + vt / self.flow_steps
         action = a_t
         # action = torch.clamp(action, -1, 1)
         return action
@@ -92,6 +93,7 @@ class FQLAgent(nn.Module):
         with torch.no_grad():
             noise = torch.randn_like(actions)
             next_actions = self.onestep_actor(next_observations, noise)
+            next_actions = next_actions + noise
             next_actions = torch.clamp(next_actions, -1, 1)
             target_q = rewards + self.discount * (1 - dones) * self.target_critic(next_observations, next_actions).mean(dim=0)
         loss = nn.functional.mse_loss(q, target_q.expand_as(q))
@@ -147,6 +149,7 @@ class FQLAgent(nn.Module):
         with torch.no_grad():
             bc_actions = self.get_bc_action(observations, noises)
         onestep_actions = self.onestep_actor(observations, noises)
+        onestep_actions = onestep_actions + noises
         distill_loss = self.alpha * nn.functional.mse_loss(onestep_actions, bc_actions)
 
         # Hint: *Do* clip the one-step actor actions when feeding them to the critic
