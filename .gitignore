@@ -9,6 +9,28 @@
 **/exp/
 **/wandb/
 
+# LaTeX build artifacts (keep .tex and .pdf)
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+*.synctex.gz
+*.toc
+*.lof
+*.lot
+*.bbl
+*.blg
+*.bcf
+*.run.xml
+*.nav
+*.snm
+*.vrb
+*.idx
+*.ind
+*.ilg
+*.brf
+
 # AI assistant / vibe-coding local artifacts
 .codex/
 .claude/
